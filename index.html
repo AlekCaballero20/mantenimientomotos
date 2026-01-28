@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+  <title>MotoLog · Control de Motos</title>
+  <meta name="description" content="MotoLog: controla mantenimientos, gasolina, repuestos, síntomas, documentos y recordatorios de tus motos. Todo local, rápido y privado." />
+
+  <!-- Tema -->
+  <meta name="theme-color" content="#0C41C4" />
+  <meta name="color-scheme" content="light" />
+  <meta name="format-detection" content="telephone=no,date=no,address=no,email=no" />
+
+  <!-- PWA / iOS -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MotoLog" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="MotoLog · Control de Motos" />
+  <meta property="og:description" content="Control local de mantenimientos, gasolina, repuestos, síntomas, documentos y recordatorios." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="./icons/icon-512.png" />
+
+  <!-- Icon -->
+  <link rel="icon" href="./icons/icon-192.png" />
+
+  <!-- CSS -->
+  <link rel="preload" href="./styles.css" as="style" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <a class="skip-link" href="#mainContent">Saltar al contenido</a>
+
+  <noscript>
+    <div class="alert" data-tone="warn" role="alert">
+      Este aplicativo necesita JavaScript para funcionar.
+    </div>
+  </noscript>
+
+  <!-- =========================
+       TOP BAR
+  ========================== -->
+  <header class="topbar" role="banner">
+    <div class="topbar__left">
+      <h1 class="brand">
+        <span class="brand__name">MotoLog</span>
+        <span class="pill" id="appMode">Local</span>
+      </h1>
+    </div>
+
+    <div class="topbar__right">
+      <label class="sr-only" for="motoSelect">Seleccionar moto</label>
+      <select aria-label="Seleccionar moto" id="motoSelect">
+        <option value="apache200">Apache 200</option>
+        <option value="apache180">Apache 180</option>
+      </select>
+
+      <button class="iconBtn" id="btnAddMoto" type="button" title="Agregar moto" aria-label="Agregar moto">＋</button>
+
+      <!-- ✅ NUEVO: eliminar moto -->
+      <button class="iconBtn" id="btnDelMoto" type="button" title="Eliminar moto" aria-label="Eliminar moto">🗑</button>
+
+      <button class="iconBtn" id="btnMenu" type="button" title="Menú" aria-label="Menú" aria-controls="mainContent">☰</button>
+    </div>
+  </header>
+
+  <!-- =========================
+       TOASTS + STATUS
+  ========================== -->
+  <div class="toastRegion" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+
+  <div class="statusBar" id="statusBar" data-tone="ok" role="status" aria-live="polite" aria-atomic="true">
+    <span class="dot" aria-hidden="true"></span>
+    <span class="statusText" id="statusText">Listo</span>
+  </div>
+
+  <!-- =========================
+       MAIN
+  ========================== -->
+  <main class="container" id="mainContent" tabindex="-1">
+    <!-- NAV / TABS -->
+    <nav class="tabs" aria-label="Secciones">
+      <div role="tablist" aria-label="Secciones de MotoLog">
+        <button
+          class="tab is-active"
+          type="button"
+          role="tab"
+          id="tabBtnDashboard"
+          data-tab="tabDashboard"
+          aria-controls="tabDashboard"
+          aria-selected="true"
+          aria-current="page"
+        >Dashboard</button>
+
+        <button
+          class="tab"
+          type="button"
+          role="tab"
+          id="tabBtnRegistrar"
+          data-tab="tabRegistrar"
+          aria-controls="tabRegistrar"
+          aria-selected="false"
+        >Registrar</button>
+
+        <button
+          class="tab"
+          type="button"
+          role="tab"
+          id="tabBtnRecordatorios"
+          data-tab="tabRecordatorios"
+          aria-controls="tabRecordatorios"
+          aria-selected="false"
+        >Recordatorios</button>
+
+        <button
+          class="tab"
+          type="button"
+          role="tab"
+          id="tabBtnDocumentos"
+          data-tab="tabDocumentos"
+          aria-controls="tabDocumentos"
+          aria-selected="false"
+        >Documentos</button>
+
+        <button
+          class="tab"
+          type="button"
+          role="tab"
+          id="tabBtnHistorial"
+          data-tab="tabHistorial"
+          aria-controls="tabHistorial"
+          aria-selected="false"
+        >Historial</button>
+      </div>
+    </nav>
+
+    <!-- =========================
+         DASHBOARD
+    ========================== -->
+    <section
+      class="tabpane is-active"
+      id="tabDashboard"
+      role="tabpanel"
+      aria-label="Dashboard"
+      aria-labelledby="tabBtnDashboard"
+      tabindex="0"
+    >
+      <!-- Acciones rápidas -->
+      <section class="card" aria-label="Acciones rápidas">
+        <div class="cardHead">
+          <h2 class="cardTitle">Acciones rápidas</h2>
+          <p class="cardSub">Lo básico, sin drama.</p>
+        </div>
+
+        <div class="quickActions">
+          <button class="qaBtn" type="button" data-go="tabRegistrar" data-type="mantenimiento">＋ Mantenimiento</button>
+          <button class="qaBtn" type="button" data-go="tabRegistrar" data-type="gasolina">⛽ Gasolina</button>
+          <button class="qaBtn" type="button" data-go="tabRegistrar" data-type="repuesto">🧰 Repuesto</button>
+          <button class="qaBtn" type="button" data-go="tabRegistrar" data-type="sintoma">🩺 Síntoma</button>
+          <button class="qaBtn" type="button" data-go="tabRecordatorios">⏰ Recordatorio</button>
+          <button class="qaBtn" type="button" data-go="tabDocumentos">📄 Documentos</button>
+        </div>
+      </section>
+
+      <!-- KPIs -->
+      <section class="dashboard" aria-label="Indicadores">
+        <article class="kpi card">
+          <span class="kpi__label">Km actual</span>
+          <div class="kpiRow">
+            <div class="kpi__value" id="kmActual">0</div>
+            <span class="kpiHint">km</span>
+          </div>
+        </article>
+
+        <article class="kpi card">
+          <span class="kpi__label">Último evento</span>
+          <div class="kpiRow">
+            <div class="kpi__value" id="kpiLastEvent">—</div>
+          </div>
+        </article>
+
+        <article class="kpi card">
+          <span class="kpi__label">Recordatorios activos</span>
+          <div class="kpiRow">
+            <div class="kpi__value" id="kpiReminders">0</div>
+          </div>
+        </article>
+
+        <article class="kpi card">
+          <span class="kpi__label">Consumo (prom.)</span>
+          <div class="kpiRow">
+            <div class="kpi__value" id="kpiFuelPerf">—</div>
+            <span class="kpiHint">km/L</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- Alertas -->
+      <section class="card" aria-label="Alertas">
+        <div class="cardHead">
+          <h2 class="cardTitle">Alertas</h2>
+          <p class="cardSub">Vencimientos y pendientes.</p>
+        </div>
+        <ul class="alertsList" id="alertsList"></ul>
+      </section>
+    </section>
+
+    <!-- =========================
+         REGISTRAR
+    ========================== -->
+    <section
+      class="tabpane"
+      id="tabRegistrar"
+      role="tabpanel"
+      aria-label="Registrar evento"
+      aria-labelledby="tabBtnRegistrar"
+      tabindex="0"
+    >
+      <section class="card">
+        <div class="cardHead">
+          <h2 class="cardTitle" id="formTitle">Registrar</h2>
+          <div class="badge" id="formTypeBadge">Evento</div>
+        </div>
+
+        <!-- Tipo -->
+        <div class="actions" role="group" aria-label="Tipo de registro">
+          <button type="button" data-type="mantenimiento">Mantenimiento</button>
+          <button type="button" data-type="gasolina">Gasolina</button>
+          <button type="button" data-type="repuesto">Repuesto</button>
+          <button type="button" data-type="sintoma">Síntoma</button>
+        </div>
+
+        <form id="eventForm" autocomplete="off" novalidate>
+          <div id="eventFormInner">
+            <div class="formGrid">
+              <label for="fecha">Fecha</label>
+              <input id="fecha" type="date" />
+
+              <label for="km">Kilometraje</label>
+              <input id="km" type="number" inputmode="numeric" min="0" placeholder="Ej: 24500" />
+
+              <label for="costo">Costo</label>
+              <input id="costo" type="number" inputmode="numeric" min="0" placeholder="Ej: 65000" />
+            </div>
+
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" rows="3" placeholder="Qué se hizo / qué pasó..."></textarea>
+
+            <!-- Subform: mantenimiento -->
+            <div class="subform" id="subformMantenimiento" hidden>
+              <h3 class="subTitle">Checklist</h3>
+              <div class="checks">
+                <label class="check"><input id="chkAceite" type="checkbox" /> Aceite</label>
+                <label class="check"><input id="chkFiltroAceite" type="checkbox" /> Filtro aceite</label>
+                <label class="check"><input id="chkFiltroAire" type="checkbox" /> Filtro aire</label>
+                <label class="check"><input id="chkCadena" type="checkbox" /> Cadena</label>
+                <label class="check"><input id="chkFrenos" type="checkbox" /> Frenos</label>
+                <label class="check"><input id="chkLuces" type="checkbox" /> Luces</label>
+              </div>
+            </div>
+
+            <!-- Subform: gasolina -->
+            <div class="subform" id="subformGasolina" hidden>
+              <h3 class="subTitle">Detalle gasolina</h3>
+              <div class="formGrid">
+                <label for="fuelLitros">Litros</label>
+                <input id="fuelLitros" type="number" step="0.01" min="0" placeholder="Ej: 3.5" />
+
+                <label for="fuelPrecioLitro">Precio/L</label>
+                <input id="fuelPrecioLitro" type="number" step="1" min="0" placeholder="Ej: 15000" />
+
+                <label for="fuelEstacion">Estación</label>
+                <input id="fuelEstacion" type="text" placeholder="Ej: Terpel 127" />
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button id="guardar" type="button">Guardar</button>
+              <button id="cancelar" type="button" class="secondary">Limpiar</button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </section>
+
+    <!-- =========================
+         RECORDATORIOS
+    ========================== -->
+    <section
+      class="tabpane"
+      id="tabRecordatorios"
+      role="tabpanel"
+      aria-label="Recordatorios"
+      aria-labelledby="tabBtnRecordatorios"
+      tabindex="0"
+    >
+      <section class="card">
+        <div class="cardHead">
+          <h2 class="cardTitle">Recordatorios</h2>
+          <p class="cardSub">Para que no te toque “ay no, se me olvidó”.</p>
+        </div>
+
+        <div class="toolbar">
+          <button id="btnAddReminder" type="button" aria-haspopup="dialog" aria-controls="reminderModal">＋ Nuevo recordatorio</button>
+          <span class="help">Tip: pon nombre + fecha o km. Sin eso, solo es ansiedad con estilo.</span>
+        </div>
+
+        <div class="tableWrap" role="region" aria-label="Listado de recordatorios" tabindex="0">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Estado</th>
+                <th>Nombre</th>
+                <th>Vence</th>
+                <th>Km</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="remindersBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <!-- =========================
+         DOCUMENTOS
+    ========================== -->
+    <section
+      class="tabpane"
+      id="tabDocumentos"
+      role="tabpanel"
+      aria-label="Documentos"
+      aria-labelledby="tabBtnDocumentos"
+      tabindex="0"
+    >
+      <section class="card">
+        <div class="cardHead">
+          <h2 class="cardTitle">Documentos</h2>
+          <p class="cardSub">SOAT, tecno, impuesto. Lo que el Estado ama cobrar.</p>
+        </div>
+
+        <div class="grid2">
+          <article class="card miniCard" aria-label="SOAT">
+            <div class="miniRow">
+              <div>
+                <div class="miniTitle">SOAT</div>
+                <div class="miniMeta" id="soatEstado">—</div>
+              </div>
+              <div class="chip" id="soatChip">—</div>
+            </div>
+            <div class="miniFoot">
+              <div class="miniValue" id="soatHasta">—</div>
+              <button class="ghost" id="btnEditDocs" type="button">Editar</button>
+            </div>
+          </article>
+
+          <article class="card miniCard" aria-label="Tecnomecánica">
+            <div class="miniRow">
+              <div>
+                <div class="miniTitle">Tecnomecánica</div>
+                <div class="miniMeta" id="rtmEstado">—</div>
+              </div>
+              <div class="chip" id="rtmChip">—</div>
+            </div>
+            <div class="miniFoot">
+              <div class="miniValue" id="rtmHasta">—</div>
+              <button class="ghost" id="btnEditDocs2" type="button">Editar</button>
+            </div>
+          </article>
+
+          <article class="card miniCard" aria-label="Impuesto">
+            <div class="miniRow">
+              <div>
+                <div class="miniTitle">Impuesto</div>
+                <div class="miniMeta" id="impEstado">—</div>
+              </div>
+              <div class="chip" id="impChip">—</div>
+            </div>
+            <div class="miniFoot">
+              <div class="miniValue" id="impHasta">—</div>
+              <button class="ghost" id="btnEditImp" type="button">Editar</button>
+            </div>
+          </article>
+
+          <article class="card miniCard" aria-label="Exportar / Importar">
+            <div class="miniRow">
+              <div>
+                <div class="miniTitle">Backup</div>
+                <div class="miniMeta">Exporta o importa tus datos</div>
+              </div>
+            </div>
+            <div class="miniFoot">
+              <button id="btnExport" type="button">Exportar</button>
+              <button class="secondary" id="btnImport" type="button">Importar</button>
+              <input id="importFile" type="file" accept="application/json" hidden />
+            </div>
+          </article>
+        </div>
+      </section>
+    </section>
+
+    <!-- =========================
+         HISTORIAL
+    ========================== -->
+    <section
+      class="tabpane"
+      id="tabHistorial"
+      role="tabpanel"
+      aria-label="Historial"
+      aria-labelledby="tabBtnHistorial"
+      tabindex="0"
+    >
+      <section class="card">
+        <div class="cardHead">
+          <h2 class="cardTitle">Historial</h2>
+          <p class="cardSub">Todo lo que has registrado.</p>
+        </div>
+
+        <div class="toolbar">
+          <label class="sr-only" for="filterTipo">Filtrar tipo</label>
+          <select id="filterTipo" aria-label="Filtrar tipo">
+            <option value="">Todos</option>
+            <option value="mantenimiento">Mantenimiento</option>
+            <option value="gasolina">Gasolina</option>
+            <option value="repuesto">Repuesto</option>
+            <option value="sintoma">Síntoma</option>
+          </select>
+
+          <input id="searchText" type="search" placeholder="Buscar…" aria-label="Buscar en historial" />
+        </div>
+
+        <div class="tableWrap" role="region" aria-label="Tabla historial" tabindex="0">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Km</th>
+                <th>Costo</th>
+                <th>Descripción</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <!-- FAB -->
+  <button class="fab" id="fabAdd" type="button" aria-label="Agregar registro" title="Agregar registro">＋</button>
+
+  <!-- =========================
+       MODAL: AGREGAR MOTO
+  ========================== -->
+  <div class="overlay hidden" id="motoOverlay" aria-hidden="true"></div>
+
+  <section class="modal hidden" id="motoModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="motoModalTitle">
+    <div class="modalCard" role="document">
+      <div class="modalHead">
+        <h3 class="modalTitle" id="motoModalTitle">Agregar moto</h3>
+        <button class="iconBtn" id="motoClose" type="button" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="formGrid">
+          <label for="motoName">Nombre</label>
+          <input id="motoName" type="text" placeholder="Ej: Apache 200" />
+
+          <label for="motoKey">ID interno</label>
+          <input id="motoKey" type="text" placeholder="Ej: apache200" />
+        </div>
+
+        <p class="mutedNote">
+          Tip: el ID debe ser sin espacios (solo letras/números). El drama lo evita el ID, no tú.
+        </p>
+      </div>
+
+      <div class="modalActions">
+        <button id="motoSave" type="button">Guardar</button>
+        <button class="secondary" id="motoCancel" type="button">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================
+       ✅ MODAL: ELIMINAR MOTO (confirmación)
+  ========================== -->
+  <div class="overlay hidden" id="delMotoOverlay" aria-hidden="true"></div>
+
+  <section class="modal hidden" id="delMotoModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="delMotoTitle">
+    <div class="modalCard" role="document">
+      <div class="modalHead">
+        <h3 class="modalTitle" id="delMotoTitle">Eliminar moto</h3>
+        <button class="iconBtn" id="delMotoClose" type="button" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <p style="margin:0 0 10px;">
+          Vas a eliminar esta moto y <strong>todo lo asociado</strong> (historial, recordatorios, docs, etc).
+          Esto no se puede deshacer.
+        </p>
+
+        <div class="subform" style="margin-top:10px;">
+          <h3 class="subTitle" style="margin-bottom:6px;">Moto seleccionada</h3>
+          <div class="miniMeta" id="delMotoName">—</div>
+        </div>
+
+        <p class="mutedNote">
+          Si la idea era “quitarla del selector pero dejar datos”, eso es otro tipo de botón. Este es el botón nuclear.
+        </p>
+      </div>
+
+      <div class="modalActions">
+        <button id="delMotoConfirm" type="button">Sí, eliminar</button>
+        <button class="secondary" id="delMotoCancel" type="button">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================
+       MODAL: DOCUMENTOS
+  ========================== -->
+  <div class="overlay hidden" id="docsOverlay" aria-hidden="true"></div>
+
+  <section class="modal hidden" id="docsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="docsModalTitle">
+    <div class="modalCard" role="document">
+      <div class="modalHead">
+        <h3 class="modalTitle" id="docsModalTitle">Fechas de documentos</h3>
+        <button class="iconBtn" id="docsClose" type="button" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="formGrid">
+          <label for="soatDate">SOAT vence</label>
+          <input type="date" id="soatDate" />
+
+          <label for="rtmDate">Tecnomecánica vence</label>
+          <input type="date" id="rtmDate" />
+        </div>
+
+        <label for="impDate">Impuesto pagado hasta (fecha)</label>
+        <input type="date" id="impDate" />
+      </div>
+
+      <div class="modalActions">
+        <button id="docsSave" type="button">Guardar</button>
+        <button class="secondary" id="docsCancel" type="button">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================
+       ✅ MODAL: RECORDATORIO (crear/editar)
+       - Esto arregla el “Nuevo recordatorio” inútil
+  ========================== -->
+  <div class="overlay hidden" id="reminderOverlay" aria-hidden="true"></div>
+
+  <section class="modal hidden" id="reminderModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="reminderModalTitle">
+    <div class="modalCard" role="document">
+      <div class="modalHead">
+        <h3 class="modalTitle" id="reminderModalTitle">Nuevo recordatorio</h3>
+        <button class="iconBtn" id="reminderClose" type="button" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="formGrid">
+          <label for="remName">Nombre</label>
+          <input id="remName" type="text" placeholder="Ej: Revisión frenos" />
+
+          <label for="remDate">Vence (fecha)</label>
+          <input id="remDate" type="date" />
+
+          <label for="remKm">Vence (km)</label>
+          <input id="remKm" type="number" inputmode="numeric" min="0" placeholder="Ej: 25000" />
+        </div>
+
+        <label for="remDesc">Descripción</label>
+        <textarea id="remDesc" rows="3" placeholder="Qué hay que hacer, dónde, notas del taller, etc…"></textarea>
+
+        <p class="mutedNote" style="margin-top:10px;">
+          Puedes usar fecha, km o ambos. La vida ya es suficientemente caótica como para dejarlo sin criterio.
+        </p>
+      </div>
+
+      <div class="modalActions">
+        <button id="reminderSave" type="button">Guardar</button>
+        <button class="secondary" id="reminderCancel" type="button">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================
+       JS (core primero, ui después)
+  ========================== -->
+  <script defer src="./app.core.js"></script>
+  <script defer src="./app.ui.js"></script>
+
+  <!-- ✅ Service Worker: con switch anti-cache para depurar -->
+  <script>
+    (function () {
+      if (!('serviceWorker' in navigator)) return;
+
+      try {
+        const qs = new URLSearchParams(location.search);
+        const noSw = qs.get('nosw') === '1' || localStorage.getItem('motolog_nosw') === '1';
+        if (noSw) return;
+
+        window.addEventListener('load', async () => {
+          try {
+            await navigator.serviceWorker.register('./sw.js', { scope: './' });
+          } catch (e) {
+            // silencioso por defecto
+          }
+        });
+      } catch (_) {}
+    })();
+  </script>
+</body>
+</html>
